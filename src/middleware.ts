@@ -21,8 +21,6 @@ export function middleware(req: NextRequest) {
   const headers = new Headers(req.headers)
   headers.set('x-tenant-slug', tenant.slug)
 
-  const res = NextResponse.next({ request: { headers } })
-
   /*
     Qualquer entrada com utm_* carimba o cookie, que sobrevive até o clique
     no botão do cardápio. Uma visita NOVA com utm_* sobrescreve a anterior:
@@ -31,9 +29,23 @@ export function middleware(req: NextRequest) {
     do cardápio não apaga a campanha.
   */
   const params = lerParams(req.nextUrl.searchParams)
-  if (temParams(params)) {
-    res.cookies.set(COOKIE_UTM, serializar(params), COOKIE_OPTS)
+  const temNovos = temParams(params)
+
+  /*
+    O cookie setado na response só volta a ser legível na PRÓXIMA request.
+    Na primeira visita com utm_* — justamente a do influenciador — o Server
+    Component leria cookie vazio e montaria href sem UTM. Por isso a UTM
+    também viaja num header do request, que o render enxerga na hora.
+  */
+  if (temNovos) {
+    headers.set('x-utm', serializar(params))
+  } else {
+    const doCookie = req.cookies.get(COOKIE_UTM)?.value
+    if (doCookie) headers.set('x-utm', doCookie)
   }
+
+  const res = NextResponse.next({ request: { headers } })
+  if (temNovos) res.cookies.set(COOKIE_UTM, serializar(params), COOKIE_OPTS)
 
   return res
 }
