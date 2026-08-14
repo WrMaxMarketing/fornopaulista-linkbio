@@ -57,7 +57,10 @@ export const TENANTS: Tenant[] = [
     // O host da request decide o tenant. Sem o domínio aqui, o middleware devolve 404.
     // '*.vercel.app' cobre a URL de produção e as de preview, que mudam a cada deploy.
     // PREENCHER — acrescente o domínio próprio quando ele existir. ex: 'fornopaulista.com.br'
-    hosts: ['localhost', '127.0.0.1', '*.vercel.app'],
+    hosts: ['localhost',
+      '127.0.0.1',
+      '*.vercel.app',
+      'fornopaulista.wrmaxmarketing.com.br',],
     campanha: 'camp_teste', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
     gaId: '', // PREENCHER — G-XXXXXXXXXX (vazio = GA4 não é injetado)
     fotoUrl: '/imagens/forno/hero.png', // foto vertical do topo
