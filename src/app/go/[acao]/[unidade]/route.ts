@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getTenantByHost, getUnidade, isAcao, type Tenant, type Unidade } from '@/config/tenants'
 import { normalizarSlug } from '@/lib/http'
-import { dadosDaRequest, isBotOrPrefetch, registrarEvento } from '@/lib/tracking'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,25 +19,12 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   if (!unidade) return new NextResponse('Not Found', { status: 404 })
 
   const ref = normalizarSlug(req.cookies.get('ref')?.value ?? '') || null
-  const sessionId = req.cookies.get('sid')?.value ?? null
 
   const destino = montarDestino(tenant, unidade, acao, ref)
   if (!destino) {
     // urlCardapio / whatsapp / maps ainda com placeholder vazio no config.
     console.error(`[go] destino não configurado: ${tenant.slug}/${unidade.slug}/${acao}`)
     return new NextResponse('Not Found', { status: 404 })
-  }
-
-  if (!isBotOrPrefetch(req)) {
-    await registrarEvento({
-      tenant_slug: tenant.slug,
-      tipo: 'saida',
-      influenciador_slug: ref,
-      unidade_slug: unidade.slug,
-      acao,
-      session_id: sessionId,
-      ...dadosDaRequest(req),
-    })
   }
 
   return NextResponse.redirect(destino, 302)

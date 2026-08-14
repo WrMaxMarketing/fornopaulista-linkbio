@@ -54,7 +54,10 @@ export const TENANTS: Tenant[] = [
   {
     slug: 'forno',
     nome: 'Forno Paulista', // nome lido do logo na referência — ajuste se for outro
-    hosts: ['localhost','127.0.0.1'],
+    // O host da request decide o tenant. Sem o domínio aqui, o middleware devolve 404.
+    // '*.vercel.app' cobre a URL de produção e as de preview, que mudam a cada deploy.
+    // PREENCHER — acrescente o domínio próprio quando ele existir. ex: 'fornopaulista.com.br'
+    hosts: ['localhost', '127.0.0.1', '*.vercel.app'],
     campanha: 'camp_teste', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
     gaId: '', // PREENCHER — G-XXXXXXXXXX (vazio = GA4 não é injetado)
     fotoUrl: '/imagens/forno/hero.png', // foto vertical do topo
@@ -112,11 +115,21 @@ function normalizarHost(host: string): string {
   return host.trim().toLowerCase().split(':')[0]
 }
 
+/** Curinga: '*.vercel.app' casa com qualquer subdomínio de vercel.app. */
+function casaCuringa(padrao: string, alvo: string): boolean {
+  const p = normalizarHost(padrao)
+  return p.startsWith('*.') && alvo.endsWith(p.slice(1))
+}
+
 export function getTenantByHost(host: string): Tenant | null {
   const alvo = normalizarHost(host)
 
-  const encontrado = TENANTS.find((t) => t.hosts.some((h) => normalizarHost(h) === alvo))
-  if (encontrado) return encontrado
+  // Host exato sempre ganha do curinga de outro tenant.
+  const exato = TENANTS.find((t) => t.hosts.some((h) => normalizarHost(h) === alvo))
+  if (exato) return exato
+
+  const curinga = TENANTS.find((t) => t.hosts.some((h) => casaCuringa(h, alvo)))
+  if (curinga) return curinga
 
   // Em desenvolvimento, qualquer host cai no primeiro tenant (localhost, IP da rede, etc).
   if (process.env.NODE_ENV === 'development') return TENANTS[0] ?? null
