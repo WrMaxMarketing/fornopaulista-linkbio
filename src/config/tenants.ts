@@ -29,8 +29,6 @@ export type Tenant = {
   nome: string
   /** hosts que resolvem para este tenant (sem porta, minúsculo) */
   hosts: string[]
-  /** vira utm_campaign */
-  campanha: string
   /** G-XXXXXXXXXX — deixe vazio para não injetar o GA4 */
   gaId: string
   /** foto do topo (hero). Vertical, ~9:10. Vazio = hub abre direto no logo */
@@ -62,8 +60,7 @@ export const TENANTS: Tenant[] = [
       '*.vercel.app',
       'fornopaulista.wrmaxmarketing.com.br',],
       //
-    campanha: 'camp_teste', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
-    gaId: '', // PREENCHER — G-XXXXXXXXXX (vazio = GA4 não é injetado)
+    gaId: 'G-NXMFFR4G7Y',
     fotoUrl: '/imagens/forno/hero.png', // foto vertical do topo
     logoUrl: '/imagens/forno/logo.png', // logo PNG com fundo transparente
     faviconUrl: '/imagens/forno/favicon.png', // a logo em 512x512 sobre fundo branco

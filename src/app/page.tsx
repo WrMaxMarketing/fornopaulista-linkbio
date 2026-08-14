@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { LinkRastreado } from './_components/LinkRastreado'
 import { ListaUnidades } from './_components/ListaUnidades'
 import { PILL, PILL_TITULO } from './_components/Pill'
 import { getTenantAtual } from '@/lib/tenant'
@@ -45,9 +46,13 @@ export default async function Hub() {
 
       <main className="flex w-full flex-col gap-3 px-4">
         {tenant.linkEvento?.url ? (
-          <a href={tenant.linkEvento.url} className={`${PILL} ${PILL_TITULO}`}>
+          <LinkRastreado
+            href={tenant.linkEvento.url}
+            className={`${PILL} ${PILL_TITULO}`}
+            evento="clique_evento"
+          >
             {tenant.linkEvento.label}
-          </a>
+          </LinkRastreado>
         ) : null}
 
         <ListaUnidades unidades={tenant.unidades} logoUrl={tenant.logoUrl} />

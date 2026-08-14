@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getTenantByHost, getUnidade, isAcao, type Tenant, type Unidade } from '@/config/tenants'
-import { normalizarSlug } from '@/lib/http'
+import { getTenantByHost, getUnidade, isAcao, type Unidade } from '@/config/tenants'
+import { COOKIE_UTM, aplicarEmUrl, desserializar } from '@/lib/utm'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,9 +18,13 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const unidade = getUnidade(tenant, unidadeSlug)
   if (!unidade) return new NextResponse('Not Found', { status: 404 })
 
-  const ref = normalizarSlug(req.cookies.get('ref')?.value ?? '') || null
+  /*
+    A UTM que o middleware guardou na entrada. Vazio = a pessoa entrou pelo
+    link cru da bio, e o destino recebe a URL limpa. Nada é inventado aqui.
+  */
+  const utm = desserializar(req.cookies.get(COOKIE_UTM)?.value ?? '')
 
-  const destino = montarDestino(tenant, unidade, acao, ref)
+  const destino = montarDestino(unidade, acao, utm)
   if (!destino) {
     // urlCardapio / whatsapp / maps ainda com placeholder vazio no config.
     console.error(`[go] destino não configurado: ${tenant.slug}/${unidade.slug}/${acao}`)
@@ -31,37 +35,30 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 }
 
 function montarDestino(
-  tenant: Tenant,
   unidade: Unidade,
   acao: 'pedido' | 'whatsapp' | 'localizacao',
-  ref: string | null,
+  utm: Record<string, string>,
 ): string | null {
   if (acao === 'pedido') {
     const url = paraUrl(unidade.urlCardapio)
     if (!url) return null
 
-    // Merge correto: preserva a query que o cardápio já tiver.
-    url.searchParams.set('utm_source', 'instagram')
-    url.searchParams.set('utm_medium', 'influencer')
-    url.searchParams.set('utm_campaign', tenant.campanha)
-    url.searchParams.set('utm_content', ref ?? 'organico')
-    url.searchParams.set('utm_term', unidade.slug)
+    // Único ponto que repassa UTM: é o destino que tem GA4 e Pixel do cardápio.
+    // A query própria do link (ex: `?f=msa`) é preservada.
+    aplicarEmUrl(url, utm)
 
     return url.toString()
   }
 
   if (acao === 'whatsapp') {
+    // wa.me descarta querystring — não adianta mandar UTM pra cá.
     const numero = unidade.whatsapp.replace(/\D/g, '')
     if (!numero) return null
 
-    const texto = ref
-      ? `Oi! Vim pelo @${ref} e quero fazer um pedido`
-      : 'Oi! Quero fazer um pedido'
-
-    return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`
+    return `https://wa.me/${numero}?text=${encodeURIComponent('Oi! Quero fazer um pedido')}`
   }
 
-  // localizacao: sem nenhum parâmetro adicional
+  // localizacao: o Maps também ignora UTM, então o link vai como está no config.
   return paraUrl(unidade.maps)?.toString() ?? null
 }
 
