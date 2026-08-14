@@ -33,7 +33,12 @@ export type Tenant = {
   campanha: string
   /** G-XXXXXXXXXX — deixe vazio para não injetar o GA4 */
   gaId: string
+  /** foto do topo (hero). Vertical, ~9:10. Vazio = hub abre direto no logo */
+  fotoUrl: string
+  /** logo em PNG/SVG com fundo transparente — fica sobreposto ao rodapé da foto */
   logoUrl: string
+  /** favicon quadrado (a logo recortada em fundo branco). Vazio = cai no logoUrl */
+  faviconUrl: string
   instagram: string
   linkEvento?: { label: string; url: string }
   cores: {
@@ -48,39 +53,56 @@ export type Tenant = {
 export const TENANTS: Tenant[] = [
   {
     slug: 'forno',
-    nome: '', // PREENCHER — nome exibido/interno do restaurante
-    hosts: [
-      // PREENCHER — ex: 'fornopaulista.wrmaxmarketing.com.br'
-      // Adicione também o domínio da Vercel se quiser testar antes do DNS apontar:
-      // 'forno-linkbio.vercel.app'
-    ],
-    campanha: '', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
+    nome: 'Forno Paulista', // nome lido do logo na referência — ajuste se for outro
+    hosts: ['localhost','127.0.0.1'],
+    campanha: 'camp_teste', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
     gaId: '', // PREENCHER — G-XXXXXXXXXX (vazio = GA4 não é injetado)
-    logoUrl: '', // PREENCHER — URL absoluta do logo (PNG/SVG, fundo transparente)
-    instagram: '', // PREENCHER — ex: 'https://instagram.com/...'
-    linkEvento: undefined, // PREENCHER (opcional) — { label: 'Reserve seu lugar', url: 'https://...' }
+    fotoUrl: '/imagens/forno/hero.png', // foto vertical do topo
+    logoUrl: '/imagens/forno/logo.png', // logo PNG com fundo transparente
+    faviconUrl: '/imagens/forno/favicon.png', // a logo em 512x512 sobre fundo branco
+    instagram: 'https://instagram.com/exemplo', // PREENCHER — ex: 'https://instagram.com/...'
+    // Some do hub enquanto a url estiver vazia.
+    // vai direto pro WhatsApp de eventos (não passa pelo /go, então não entra no rastreio)
+    linkEvento: { label: 'Marque Seu Evento', url: 'https://wa.me/558698194974' },
     cores: {
-      fundo: '#7B1113', // default provisório
-      botao: '#FFFFFF', // default provisório
-      textoBotao: '#B8860B', // default provisório
-      destaque: '#D4AF37', // default provisório
+      // Amostradas da referência: fundo #7C180B, texto dos botões no mesmo tom.
+      fundo: '#7B1113',
+      botao: '#FFFFFF',
+      textoBotao: '#7B1113', // na referência o texto é vinho, não dourado
+      destaque: '#D4AF37', // usado no foco do teclado e no fallback sem logo
     },
     unidades: [
+      // Nomes lidos da referência. Confirme os slugs antes de divulgar:
+      // eles viram utm_term e não devem mudar depois que o link estiver no ar.
       {
-        slug: 'unidade_1', // PREENCHER — minúsculo, sem acento, underscore. vai pro utm_term
-        nome: '', // PREENCHER — ex: 'Unidade Paulista'
-        urlCardapio: '', // PREENCHER — URL do cardápio Anota AI
-        whatsapp: '', // PREENCHER — 55DDDNÚMERO, só dígitos
-        maps: '', // PREENCHER — link do Google Maps
+        slug: 'hugo_napoleao',
+        nome: 'Unidade Hugo Napoleão',
+        urlCardapio: 'https://fornopaulista.tuigoapp.com.br/fornopaulistaleste/pedidos',
+        whatsapp: '5586995709028',
+        maps: 'https://maps.app.goo.gl/ULCJ1BwbcY5JpVh86',
       },
       {
-        slug: 'unidade_2', // PREENCHER
-        nome: '', // PREENCHER
-        urlCardapio: '', // PREENCHER
-        whatsapp: '', // PREENCHER
-        maps: '', // PREENCHER
+        slug: 'dom_severino',
+        nome: 'Unidade Dom Severino',
+        urlCardapio: 'https://pedido.anota.ai/loja/forno-paulista-pizzaria-dom-severino-1',
+        whatsapp: '558688652928',
+        maps: 'https://maps.app.goo.gl/3Uw6vJfbenHqwrxB7',
       },
-      // Duplique o bloco acima para cada unidade adicional.
+      {
+        slug: 'dirceu',
+        nome: 'Unidade Dirceu',
+        urlCardapio: 'https://pedido.anota.ai/loja/forno-paulista-dirceu-4',
+        whatsapp: '558681853000',
+        maps: 'https://maps.app.goo.gl/GcuenyDuRwcSFLRQ6',
+      },
+      {
+        slug: 'sul',
+        nome: 'Unidade Sul',
+        // o ?f=msa do link original é preservado: o redirect só acrescenta as utm_*
+        urlCardapio: 'https://pedido.anota.ai/loja/forno-paulista-sul?f=msa',
+        whatsapp: '558695428466',
+        maps: 'https://maps.app.goo.gl/aeuYFQM3SX1TRvdV7',
+      },
     ],
   },
   // Novos restaurantes = novo objeto Tenant aqui. Nada mais no código muda.

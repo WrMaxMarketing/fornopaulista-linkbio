@@ -5,16 +5,22 @@ import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getTenantAtual()
+  // favicon é por tenant: cai no logo quando o faviconUrl não estiver preenchido
+  const icone = tenant?.faviconUrl || tenant?.logoUrl
+
   return {
     title: tenant?.nome || 'Link in bio',
     description: tenant?.nome ? `Peça no ${tenant.nome}` : undefined,
     robots: { index: false, follow: false },
+    icons: icone ? { icon: icone, shortcut: icone, apple: icone } : undefined,
   }
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  // a foto sangra a largura toda: ocupa também as áreas do notch/gestos
+  viewportFit: 'cover' as const,
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

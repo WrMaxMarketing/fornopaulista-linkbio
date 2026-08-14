@@ -1,14 +1,27 @@
 'use client'
 
-import { useId, useState } from 'react'
-import { IconeChevron, IconePin, IconeSacola, IconeWhatsapp } from './icones'
+import { useId } from 'react'
+import { IconeChevron, IconePin, IconeWhatsapp } from './icones'
+import {
+  PILL,
+  PILL_ICONE_DIR,
+  PILL_ICONE_ESQ,
+  PILL_LOGO_ESQ,
+  PILL_TEXTO,
+  PILL_TITULO,
+} from './Pill'
 
-/** Sem `justify-*` aqui: cada uso define o seu (ordem de classe não decide vencedor no Tailwind). */
-const BOTAO =
-  'flex min-h-12 w-full items-center gap-2 rounded-full bg-[var(--cor-botao)] px-5 font-semibold tracking-wide text-[var(--cor-texto-botao)] outline-offset-2 transition-transform focus-visible:outline-2 focus-visible:outline-[var(--cor-destaque)] active:scale-[0.99]'
+type Props = {
+  nome: string
+  slug: string
+  /** logo do tenant — entra no lugar do ícone em "Seu Pedido" */
+  logoUrl: string
+  /** quem manda no aberto/fechado é a lista: só um acordeão fica aberto por vez */
+  aberto: boolean
+  onToggle: () => void
+}
 
-export function Acordeao({ nome, slug }: { nome: string; slug: string }) {
-  const [aberto, setAberto] = useState(false)
+export function Acordeao({ nome, slug, logoUrl, aberto, onToggle }: Props) {
   const painelId = useId()
 
   return (
@@ -17,31 +30,48 @@ export function Acordeao({ nome, slug }: { nome: string; slug: string }) {
         type="button"
         aria-expanded={aberto}
         aria-controls={painelId}
-        onClick={() => setAberto((v) => !v)}
-        className={`${BOTAO} justify-between`}
+        onClick={onToggle}
+        className={`${PILL} ${PILL_TITULO}`}
       >
-        {/* espaçador para o nome ficar centralizado mesmo com o chevron à direita */}
-        <span className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <span className="flex-1 text-center">{nome}</span>
+        {nome}
         <IconeChevron
-          className={`h-5 w-5 shrink-0 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}
+          className={`${PILL_ICONE_DIR} transition-transform duration-300 ease-out motion-reduce:transition-none ${aberto ? 'rotate-180' : ''}`}
         />
       </button>
 
-      <div id={painelId} className={aberto ? 'mt-2 flex flex-col gap-2 pb-2' : 'hidden'}>
-        {/* <a href> puro: navegação de página inteira, o clique precisa chegar no servidor. */}
-        <a href={`/go/pedido/${slug}`} className={`${BOTAO} justify-center`}>
-          <IconeSacola className="h-5 w-5 shrink-0" />
-          Seu Pedido
-        </a>
-        <a href={`/go/whatsapp/${slug}`} className={`${BOTAO} justify-center`}>
-          <IconeWhatsapp className="h-5 w-5 shrink-0" />
-          WhatsApp
-        </a>
-        <a href={`/go/localizacao/${slug}`} className={`${BOTAO} justify-center`}>
-          <IconePin className="h-5 w-5 shrink-0" />
-          Localização
-        </a>
+      {/*
+        Truque do grid 0fr -> 1fr: anima a altura sem precisar medir o conteúdo em JS.
+        `inert` tira os links do foco do teclado enquanto o painel está fechado.
+      */}
+      <div
+        id={painelId}
+        inert={!aberto}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
+          aberto ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div
+          className={`flex flex-col gap-2 overflow-hidden transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none ${
+            aberto ? 'translate-y-0 pt-2 opacity-100' : '-translate-y-1 opacity-0'
+          }`}
+        >
+          {/* <a href> puro: navegação de página inteira, o clique precisa chegar no servidor. */}
+          <a href={`/go/pedido/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className={PILL_LOGO_ESQ} />
+            ) : null}
+            Seu Pedido
+          </a>
+          <a href={`/go/whatsapp/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+            <IconeWhatsapp className={`${PILL_ICONE_ESQ} text-whatsapp`} />
+            WhatsApp
+          </a>
+          <a href={`/go/localizacao/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+            <IconePin className={PILL_ICONE_ESQ} />
+            Localização
+          </a>
+        </div>
       </div>
     </div>
   )

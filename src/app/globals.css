@@ -1,16 +1,32 @@
 @import 'tailwindcss';
 
-/* Nenhuma fonte externa: system font stack. */
+/* Nenhuma fonte externa. Arial (com fallbacks para quem não a tem instalada). */
 @theme {
-  --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-sans: Arial, Helvetica, 'Liberation Sans', 'Nimbus Sans', sans-serif;
+
+  /* Raio e altura dos pills, iguais aos medidos na referência. */
+  --radius-pill: 14px;
+
+  /* Cores de ícone que NÃO são do tenant (marca do WhatsApp). */
+  --color-whatsapp: #25d366;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* nada de rolagem lateral no celular, mesmo com a foto sangrando a largura toda */
+  overflow-x: hidden;
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* respeita a barra de gestos do iPhone */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* toque no celular: sem realce azul e sem zoom por duplo-toque nos pills */
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
