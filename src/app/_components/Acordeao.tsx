@@ -2,6 +2,7 @@
 
 import { useId } from 'react'
 import { IconeChevron, IconePin, IconeWhatsapp } from './icones'
+import type { ItemUnidade } from './ListaUnidades'
 import { LinkRastreado } from './LinkRastreado'
 import {
   PILL,
@@ -13,8 +14,8 @@ import {
 } from './Pill'
 
 type Props = {
-  nome: string
-  slug: string
+  /** slug, nome e os três destinos finais, já montados no servidor */
+  unidade: ItemUnidade
   /** logo do tenant — entra no lugar do ícone em "Seu Pedido" */
   logoUrl: string
   /** quem manda no aberto/fechado é a lista: só um acordeão fica aberto por vez */
@@ -22,8 +23,9 @@ type Props = {
   onToggle: () => void
 }
 
-export function Acordeao({ nome, slug, logoUrl, aberto, onToggle }: Props) {
+export function Acordeao({ unidade, logoUrl, aberto, onToggle }: Props) {
   const painelId = useId()
+  const { slug, nome, hrefPedido, hrefWhatsapp, hrefLocalizacao } = unidade
 
   return (
     <div className="w-full">
@@ -56,38 +58,44 @@ export function Acordeao({ nome, slug, logoUrl, aberto, onToggle }: Props) {
             aberto ? 'translate-y-0 pt-2 opacity-100' : '-translate-y-1 opacity-0'
           }`}
         >
-          {/* navegação de página inteira: o clique precisa chegar no servidor,
-              que é quem lê o cookie da UTM e monta o destino. */}
-          <LinkRastreado
-            href={`/go/pedido/${slug}`}
-            className={`${PILL} ${PILL_TEXTO}`}
-            evento="clique_pedido"
-            params={{ unidade: slug }}
-          >
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className={PILL_LOGO_ESQ} />
-            ) : null}
-            Seu Pedido
-          </LinkRastreado>
-          <LinkRastreado
-            href={`/go/whatsapp/${slug}`}
-            className={`${PILL} ${PILL_TEXTO}`}
-            evento="clique_whatsapp"
-            params={{ unidade: slug }}
-          >
-            <IconeWhatsapp className={`${PILL_ICONE_ESQ} text-whatsapp`} />
-            WhatsApp
-          </LinkRastreado>
-          <LinkRastreado
-            href={`/go/localizacao/${slug}`}
-            className={`${PILL} ${PILL_TEXTO}`}
-            evento="clique_localizacao"
-            params={{ unidade: slug }}
-          >
-            <IconePin className={PILL_ICONE_ESQ} />
-            Localização
-          </LinkRastreado>
+          {/* href já é o destino final: o gtag só decora com `_gl` o link que
+              aponta pro domínio do cardápio. Navegação de página inteira. */}
+          {hrefPedido ? (
+            <LinkRastreado
+              href={hrefPedido}
+              className={`${PILL} ${PILL_TEXTO}`}
+              evento="clique_pedido"
+              params={{ unidade: slug }}
+            >
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="" className={PILL_LOGO_ESQ} />
+              ) : null}
+              Seu Pedido
+            </LinkRastreado>
+          ) : null}
+          {hrefWhatsapp ? (
+            <LinkRastreado
+              href={hrefWhatsapp}
+              className={`${PILL} ${PILL_TEXTO}`}
+              evento="clique_whatsapp"
+              params={{ unidade: slug }}
+            >
+              <IconeWhatsapp className={`${PILL_ICONE_ESQ} text-whatsapp`} />
+              WhatsApp
+            </LinkRastreado>
+          ) : null}
+          {hrefLocalizacao ? (
+            <LinkRastreado
+              href={hrefLocalizacao}
+              className={`${PILL} ${PILL_TEXTO}`}
+              evento="clique_localizacao"
+              params={{ unidade: slug }}
+            >
+              <IconePin className={PILL_ICONE_ESQ} />
+              Localização
+            </LinkRastreado>
+          ) : null}
         </div>
       </div>
     </div>

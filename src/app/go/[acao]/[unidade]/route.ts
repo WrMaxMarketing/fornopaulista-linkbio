@@ -1,9 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getTenantByHost, getUnidade, isAcao, type Unidade } from '@/config/tenants'
-import { COOKIE_UTM, aplicarEmUrl, desserializar } from '@/lib/utm'
+import { getTenantByHost, getUnidade, isAcao } from '@/config/tenants'
+import { montarDestino } from '@/lib/destino'
+import { COOKIE_UTM, desserializar } from '@/lib/utm'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/*
+  Fallback dos links já publicados. O hub agora põe o destino final direto no
+  href — quem chega aqui veio de um link antigo. A URL de saída é montada pela
+  MESMA função do hub (@/lib/destino), então os dois caminhos coincidem.
+*/
 
 type Ctx = { params: Promise<{ acao: string; unidade: string }> }
 
@@ -32,43 +39,4 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   }
 
   return NextResponse.redirect(destino, 302)
-}
-
-function montarDestino(
-  unidade: Unidade,
-  acao: 'pedido' | 'whatsapp' | 'localizacao',
-  utm: Record<string, string>,
-): string | null {
-  if (acao === 'pedido') {
-    const url = paraUrl(unidade.urlCardapio)
-    if (!url) return null
-
-    // Único ponto que repassa UTM: é o destino que tem GA4 e Pixel do cardápio.
-    // A query própria do link (ex: `?f=msa`) é preservada.
-    aplicarEmUrl(url, utm)
-
-    return url.toString()
-  }
-
-  if (acao === 'whatsapp') {
-    // wa.me descarta querystring — não adianta mandar UTM pra cá.
-    const numero = unidade.whatsapp.replace(/\D/g, '')
-    if (!numero) return null
-
-    return `https://wa.me/${numero}?text=${encodeURIComponent('Oi! Quero fazer um pedido')}`
-  }
-
-  // localizacao: o Maps também ignora UTM, então o link vai como está no config.
-  return paraUrl(unidade.maps)?.toString() ?? null
-}
-
-function paraUrl(valor: string): URL | null {
-  if (!valor) return null
-  try {
-    const url = new URL(valor)
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
-    return url
-  } catch {
-    return null
-  }
 }

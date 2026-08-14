@@ -1,14 +1,34 @@
 import { notFound } from 'next/navigation'
 import { LinkRastreado } from './_components/LinkRastreado'
-import { ListaUnidades } from './_components/ListaUnidades'
+import { ListaUnidades, type ItemUnidade } from './_components/ListaUnidades'
 import { PILL, PILL_TITULO } from './_components/Pill'
+import { montarDestino, montarLinkEvento } from '@/lib/destino'
 import { getTenantAtual } from '@/lib/tenant'
+import { getUtmAtual } from '@/lib/utm-server'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Hub() {
   const tenant = await getTenantAtual()
   if (!tenant) notFound()
+
+  /*
+    Os destinos finais são montados AQUI, no servidor, e entram direto no href.
+    O gtag só decora o link com `_gl` (o que mantém a mesma sessão do GA4 no
+    cardápio) quando o href já aponta pro domínio de saída — um href `/go/...`
+    é do mesmo domínio, não é decorado, e o 302 não carrega o `_gl`.
+  */
+  const utm = await getUtmAtual()
+
+  const unidades: ItemUnidade[] = tenant.unidades.map((u) => ({
+    slug: u.slug,
+    nome: u.nome || u.slug,
+    hrefPedido: montarDestino(u, 'pedido', utm),
+    hrefWhatsapp: montarDestino(u, 'whatsapp', utm),
+    hrefLocalizacao: montarDestino(u, 'localizacao', utm),
+  }))
+
+  const hrefEvento = tenant.linkEvento?.url ? montarLinkEvento(tenant.linkEvento.url, utm) : null
 
   const comFoto = Boolean(tenant.fotoUrl)
 
@@ -45,9 +65,9 @@ export default async function Hub() {
       </header>
 
       <main className="flex w-full flex-col gap-3 px-4">
-        {tenant.linkEvento?.url ? (
+        {hrefEvento && tenant.linkEvento ? (
           <LinkRastreado
-            href={tenant.linkEvento.url}
+            href={hrefEvento}
             className={`${PILL} ${PILL_TITULO}`}
             evento="clique_evento"
           >
@@ -55,7 +75,7 @@ export default async function Hub() {
           </LinkRastreado>
         ) : null}
 
-        <ListaUnidades unidades={tenant.unidades} logoUrl={tenant.logoUrl} />
+        <ListaUnidades unidades={unidades} logoUrl={tenant.logoUrl} />
       </main>
     </div>
   )
