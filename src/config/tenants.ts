@@ -61,6 +61,7 @@ export const TENANTS: Tenant[] = [
       '127.0.0.1',
       '*.vercel.app',
       'fornopaulista.wrmaxmarketing.com.br',],
+      //
     campanha: 'camp_teste', // PREENCHER — vira utm_campaign. ex: 'influencers_2026'
     gaId: '', // PREENCHER — G-XXXXXXXXXX (vazio = GA4 não é injetado)
     fotoUrl: '/imagens/forno/hero.png', // foto vertical do topo
