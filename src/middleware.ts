@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getTenantByHost } from '@/config/tenants'
+import { COOKIE_OPTS } from '@/lib/http'
+import { COOKIE_UTM, lerParams, serializar, temParams } from '@/lib/utm'
 
 export const config = {
   // Ignora /_next, favicon e assets estáticos.
@@ -19,5 +21,19 @@ export function middleware(req: NextRequest) {
   const headers = new Headers(req.headers)
   headers.set('x-tenant-slug', tenant.slug)
 
-  return NextResponse.next({ request: { headers } })
+  const res = NextResponse.next({ request: { headers } })
+
+  /*
+    Qualquer entrada com utm_* carimba o cookie, que sobrevive até o clique
+    no botão do cardápio. Uma visita NOVA com utm_* sobrescreve a anterior:
+    vale a última origem que trouxe a pessoa (last click, igual ao GA4).
+    Sem utm_* na URL o cookie fica como está — recarregar a página ou voltar
+    do cardápio não apaga a campanha.
+  */
+  const params = lerParams(req.nextUrl.searchParams)
+  if (temParams(params)) {
+    res.cookies.set(COOKIE_UTM, serializar(params), COOKIE_OPTS)
+  }
+
+  return res
 }

@@ -2,6 +2,7 @@
 
 import { useId } from 'react'
 import { IconeChevron, IconePin, IconeWhatsapp } from './icones'
+import { LinkRastreado } from './LinkRastreado'
 import {
   PILL,
   PILL_ICONE_DIR,
@@ -55,22 +56,38 @@ export function Acordeao({ nome, slug, logoUrl, aberto, onToggle }: Props) {
             aberto ? 'translate-y-0 pt-2 opacity-100' : '-translate-y-1 opacity-0'
           }`}
         >
-          {/* <a href> puro: navegação de página inteira, o clique precisa chegar no servidor. */}
-          <a href={`/go/pedido/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+          {/* navegação de página inteira: o clique precisa chegar no servidor,
+              que é quem lê o cookie da UTM e monta o destino. */}
+          <LinkRastreado
+            href={`/go/pedido/${slug}`}
+            className={`${PILL} ${PILL_TEXTO}`}
+            evento="clique_pedido"
+            params={{ unidade: slug }}
+          >
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="" className={PILL_LOGO_ESQ} />
             ) : null}
             Seu Pedido
-          </a>
-          <a href={`/go/whatsapp/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+          </LinkRastreado>
+          <LinkRastreado
+            href={`/go/whatsapp/${slug}`}
+            className={`${PILL} ${PILL_TEXTO}`}
+            evento="clique_whatsapp"
+            params={{ unidade: slug }}
+          >
             <IconeWhatsapp className={`${PILL_ICONE_ESQ} text-whatsapp`} />
             WhatsApp
-          </a>
-          <a href={`/go/localizacao/${slug}`} className={`${PILL} ${PILL_TEXTO}`}>
+          </LinkRastreado>
+          <LinkRastreado
+            href={`/go/localizacao/${slug}`}
+            className={`${PILL} ${PILL_TEXTO}`}
+            evento="clique_localizacao"
+            params={{ unidade: slug }}
+          >
             <IconePin className={PILL_ICONE_ESQ} />
             Localização
-          </a>
+          </LinkRastreado>
         </div>
       </div>
     </div>
