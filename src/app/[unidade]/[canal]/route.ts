@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { getTenantByHost } from '@/config/tenants'
 import {
   isUnidadeSlug,
@@ -22,7 +23,8 @@ export const dynamic = 'force-dynamic'
      com dimensões personalizadas: unidade, canal
   2. Redireciona para o cardápio da unidade no Tuigo com as UTMs do canal
 
-  O utm_term leva o slug da unidade pra filtrar no GA4 por unidade.
+  O redirect sai imediato; o envio do evento fica em waitUntil — a Vercel
+  mantém a função viva até o fetch terminar, sem atrasar o usuário.
 */
 
 type Ctx = { params: Promise<{ unidade: string; canal: string }> }
@@ -54,19 +56,21 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const destino = new URL(unidade.urlCardapio)
   aplicarEmUrl(destino, utm)
 
-  /* ── Evento GA4 (fire-and-forget) ───────────────────────── */
+  /* ── Evento GA4 via waitUntil ───────────────────────────── */
 
   if (tenant.gaId) {
-    // Não espera a promise — o redirect sai imediato
-    enviarEventoGA4(tenant.gaId, 'clique_link_curto', {
-      unidade: UNIDADES_LABEL[unidadeSlug] ?? unidadeSlug,
-      canal: CANAIS_LABEL[canalSlug] ?? canalSlug,
-      unidade_slug: unidadeSlug,
-      canal_slug: canalSlug,
-      link: `/${unidadeSlug}/${canalSlug}`,
-    }).catch(() => {
-      // Já logado dentro de enviarEventoGA4
-    })
+    // waitUntil: a Vercel devolve o redirect pro cliente imediatamente
+    // mas mantém a função rodando até o fetch do GA4 completar.
+    // Sem isso, a função congela e o evento se perde.
+    waitUntil(
+      enviarEventoGA4(tenant.gaId, 'clique_link_curto', {
+        unidade: UNIDADES_LABEL[unidadeSlug] ?? unidadeSlug,
+        canal: CANAIS_LABEL[canalSlug] ?? canalSlug,
+        unidade_slug: unidadeSlug,
+        canal_slug: canalSlug,
+        link: `/${unidadeSlug}/${canalSlug}`,
+      }),
+    )
   }
 
   return NextResponse.redirect(destino.toString(), 302)
